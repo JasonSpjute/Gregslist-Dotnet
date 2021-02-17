@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using dngregslist.Models;
+using dngregslist.Services;
 using dngregslist.db;
 
 namespace dngregslist.Controllers
@@ -9,14 +11,19 @@ namespace dngregslist.Controllers
     [Route("api/[controller]")]
     public class CarsController : ControllerBase
     {
+        private readonly CarsService _cs;
+        public CarsController(CarsService cs)
+        {
+            _cs = cs;
+        }
         [HttpGet]
         public ActionResult<IEnumerable<Car>> Get()
         {
             try
             {
-                return Ok(FAKEDB.Cars);
+                return Ok(_cs.Get());
             }
-            catch (System.Exception err)
+            catch (Exception err)
             {
                 return BadRequest(err.Message);
             }
@@ -26,10 +33,10 @@ namespace dngregslist.Controllers
         {
             try
             {
-                Car carToReturn = FAKEDB.Cars.Find(c => c.Id == id);
+                Car carToReturn = _cs.Get(id);
                 return Ok(carToReturn);
             }
-            catch (System.Exception err)
+            catch (Exception err)
             {
                 return BadRequest(err.Message);
             }
@@ -39,12 +46,26 @@ namespace dngregslist.Controllers
         {
             try
             {
-                FAKEDB.Cars.Add(newCar);
-                return Ok(newCar);
+                Car addCar = _cs.Create(newCar);
+                return Ok(addCar);
             }
-            catch (System.Exception err)
+            catch (Exception err)
             {
                 return BadRequest(err.Message);
+            }
+        }
+        [HttpPut("{id}")]
+        public ActionResult<Car> Edit([FromBody] Car updated, string id)
+        {
+            try
+            {
+                updated.Id = id;
+                Car updatedCar = _cs.Edit(updated);
+                return Ok(updatedCar);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
             }
         }
         [HttpDelete("{id}")]
@@ -52,14 +73,10 @@ namespace dngregslist.Controllers
         {
             try
             {
-                Car carToRemove = FAKEDB.Cars.Find(c => c.Id == id);
-                if (FAKEDB.Cars.Remove(carToRemove))
-                {
-                    return Ok("Car Deleted");
-                };
-                throw new System.Exception("Car does not exist");
+                _cs.Delete(id);
+                return Ok("Deleted");
             }
-            catch (System.Exception err)
+            catch (Exception err)
             {
                 return BadRequest(err.Message);
             }
