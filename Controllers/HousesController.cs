@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using dngregslist.Models;
-using dngregslist.db;
+using System;
+using dngregslist.Services;
 
 namespace dngregslist.Controllers
 {
@@ -9,14 +10,19 @@ namespace dngregslist.Controllers
     [Route("api/[controller]")]
     public class HousesController : ControllerBase
     {
+        private readonly HousesService _hs;
+        public HousesController(HousesService hs)
+        {
+            _hs = hs;
+        }
         [HttpGet]
         public ActionResult<IEnumerable<House>> Get()
         {
             try
             {
-                return Ok(FAKEDB.Houses);
+                return Ok(_hs.Get());
             }
-            catch (System.Exception err)
+            catch (Exception err)
             {
                 return BadRequest(err.Message);
             }
@@ -26,10 +32,10 @@ namespace dngregslist.Controllers
         {
             try
             {
-                House houseToReturn = FAKEDB.Houses.Find(h => h.Id == id);
+                House houseToReturn = _hs.Get(id);
                 return Ok(houseToReturn);
             }
-            catch (System.Exception err)
+            catch (Exception err)
             {
                 return BadRequest(err.Message);
             }
@@ -39,12 +45,26 @@ namespace dngregslist.Controllers
         {
             try
             {
-                FAKEDB.Houses.Add(newHouse);
-                return Ok(newHouse);
+                House addHouse = _hs.Create(newHouse);
+                return Ok(addHouse);
             }
-            catch (System.Exception err)
+            catch (Exception err)
             {
                 return BadRequest(err.Message);
+            }
+        }
+        [HttpPut("{id}")]
+        public ActionResult<House> Edit([FromBody] House updated, string id)
+        {
+            try
+            {
+                updated.Id = id;
+                House updatedHouse = _hs.Edit(updated);
+                return Ok(updatedHouse);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
             }
         }
         [HttpDelete("{id}")]
@@ -52,14 +72,10 @@ namespace dngregslist.Controllers
         {
             try
             {
-                House houseToRemove = FAKEDB.Houses.Find(h => h.Id == id);
-                if (FAKEDB.Houses.Remove(houseToRemove))
-                {
-                    return Ok("House Deleted");
-                };
-                throw new System.Exception("House does not exist");
+                _hs.Delete(id);
+                return Ok("deleted");
             }
-            catch (System.Exception err)
+            catch (Exception err)
             {
                 return BadRequest(err.Message);
             }

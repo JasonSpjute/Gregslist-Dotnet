@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using dngregslist.Models;
 using dngregslist.Services;
-using dngregslist.db;
 
 namespace dngregslist.Controllers
 {
